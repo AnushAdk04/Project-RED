@@ -1,0 +1,65 @@
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import debug_blood_requests
+
+from .views import (
+    AuthViewSet, UserViewSet, HospitalViewSet, BloodRequestViewSet,
+    DonationViewSet, BloodTestViewSet, ChatRoomViewSet, NotificationViewSet,
+    complete_donation, available_blood_requests, CustomTokenObtainPairView,
+    create_chatroom_for_donation, HospitalAuthViewSet, HospitalDashboardViewSet,
+    DonorHospitalAssignmentViewSet  # Import the new DonorHospitalAssignmentViewSet
+)
+from rest_framework_simplejwt.views import TokenRefreshView
+
+router = DefaultRouter()
+router.register(r'auth', AuthViewSet, basename='auth')
+router.register(r'users', UserViewSet, basename='user')
+router.register(r'hospitals', HospitalViewSet, basename='hospital')
+router.register(r'blood-requests', BloodRequestViewSet, basename='bloodrequest')
+router.register(r'donations', DonationViewSet, basename='donation')
+router.register(r'blood-tests', BloodTestViewSet, basename='bloodtest')
+router.register(r'chat-rooms', ChatRoomViewSet, basename='chatroom')
+router.register(r'notifications', NotificationViewSet, basename='notification')
+router.register(r'hospital-auth', HospitalAuthViewSet, basename='hospital-auth')
+router.register(r'hospital-dashboard', HospitalDashboardViewSet, basename='hospital-dashboard')
+
+# Register the new DonorHospitalAssignment endpoint
+router.register(r'donor-hospital-assignments', DonorHospitalAssignmentViewSet, basename='donorhospitalassignment')
+
+urlpatterns = [
+    path('api/', include(router.urls)),
+    path('api/complete-donation/<uuid:donation_id>/', complete_donation, name='complete-donation'),
+    path('api/available-blood-requests/', available_blood_requests, name='available-blood-requests'),
+    path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/debug-blood-requests/', debug_blood_requests, name='debug-blood-requests'),
+    path('api/create-chatroom-for-donation/<uuid:donation_id>/', create_chatroom_for_donation, name='create-chatroom-for-donation'),
+
+    # Updated URLs for hospital dashboard and blood test actions
+    path('api/hospital-dashboard/donors/',
+         HospitalDashboardViewSet.as_view({'get': 'list'}),
+         name='hospital-dashboard-donors'),
+    path('api/hospital-dashboard/assignments/<uuid:pk>/submit_blood_test/',
+         HospitalDashboardViewSet.as_view({'post': 'submit_blood_test'}),
+         name='hospital-dashboard-submit-blood-test'),
+    path('api/hospital-dashboard/assignments/<uuid:pk>/update_blood_test/',
+         HospitalDashboardViewSet.as_view({'put': 'update_blood_test'}),
+         name='hospital-dashboard-update-blood-test'),
+
+    # New endpoint for marking assignment as completed
+    path('api/hospital-dashboard/assignments/<uuid:pk>/mark_completed/',
+         HospitalDashboardViewSet.as_view({'post': 'mark_as_completed'}),
+         name='hospital-dashboard-mark-completed'),
+    
+    path('api/password-reset/request/', AuthViewSet.as_view({'post': 'request_password_reset'}), name='password-reset-request'),
+    path('api/password-reset/confirm/', AuthViewSet.as_view({'post': 'reset_password'}), name='password-reset-confirm'),
+    path('api/hospital-password-reset/request/', HospitalAuthViewSet.as_view({'post': 'request_password_reset'}), name='hospital-password-reset-request'),
+    path('api/hospital-password-reset/confirm/', HospitalAuthViewSet.as_view({'post': 'reset_password'}), name='hospital-password-reset-confirm'),
+    path('api/hospital-dashboard/assignments/<uuid:pk>/generate_prediction/', HospitalDashboardViewSet.as_view({'post': 'generate_prediction'}), name='hospital-dashboard-generate-prediction'),
+    path('api/test-openai/', HospitalDashboardViewSet.as_view({'get': 'test_openai'}), name='test-openai'),
+    path('api/users/profile/', UserViewSet.as_view({'get': 'profile'}), name='user-profile'),
+    path('api/users/<uuid:pk>/update_profile/', UserViewSet.as_view({'put': 'update_profile', 'patch': 'update_profile'}), name='user-update-profile'),
+    path('api/users/<uuid:pk>/change_password/', UserViewSet.as_view({'post': 'change_password'}), name='user-change-password'),
+    
+    
+]
